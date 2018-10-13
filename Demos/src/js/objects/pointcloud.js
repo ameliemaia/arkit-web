@@ -43,7 +43,7 @@ export default class ARPointCloud {
     const material = new ShaderMaterial({
       uniforms: {
         color: {
-          value: new Color(0xffff00)
+          value: new Color(0xffffff)
         }
       },
       vertexShader,

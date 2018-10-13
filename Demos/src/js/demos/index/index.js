@@ -49,6 +49,8 @@ class App {
       dev: new PerspectiveCamera(fov, ratio, near, far),
       ar: new ARCamera()
     };
+    this.cameras.main = IS_NATIVE ? this.cameras.ar : this.cameras.dev;
+
     this.cameras.dev.position.set(1 * zoom, 0.75 * zoom, 1 * zoom);
     this.cameras.dev.lookAt(new Vector3());
 
@@ -80,6 +82,9 @@ class App {
     // Controls
     this.touchControls = new TouchControls(this.renderer.domElement);
 
+    // Resize timeout id
+    this.resizeTimeout = 0;
+
     // Map of anchors
     // identifier is the key
     this.anchors = {};
@@ -94,8 +99,8 @@ class App {
       );
       this.scene.add(new GridHelper());
       this.scene.add(new AxisHelper());
-      this.renderDev();
     }
+    this.render();
   }
 
   bindListeners() {
@@ -110,18 +115,25 @@ class App {
   }
 
   onARFrame = data => {
-    if (SHOW_STATS) {
-      stats.begin();
-    }
+    this.lights.ambient.intensity = data.ambientIntensity;
+    this.cameras.ar.update(data.camera);
 
-    this.update(data);
-
-    this.renderer.render(this.scene, this.cameras.ar);
-
-    if (SHOW_STATS) {
-      this.renderStats.update(this.renderer);
-      stats.end();
-    }
+    data.anchors.forEach(anchor => {
+      if (anchor.type === 'ARPlaneAnchor') {
+        if (this.anchors[anchor.identifier] === undefined) {
+          this.addPlaneMesh(anchor);
+        } else {
+          this.updatePlaneMesh(anchor);
+        }
+      }
+      if (anchor.type === 'ARAnchor') {
+        if (this.anchors[anchor.identifier] === undefined) {
+          this.addMesh(anchor);
+        } else {
+          this.updateMesh(anchor);
+        }
+      }
+    });
   };
 
   onARAnchorsAdded = data => {
@@ -152,30 +164,17 @@ class App {
     ARKit.addAnchor();
   };
 
-  update(data) {
-    this.lights.ambient.intensity = data.ambientIntensity;
+  update() {
+    if (SHOW_STATS) {
+      stats.begin();
+    }
 
-    this.cameras.ar.matrixWorldInverse.fromArray(
-      data.camera.matrixWorldInverse
-    );
-    this.cameras.ar.projectionMatrix.fromArray(data.camera.projection);
+    this.renderer.render(this.scene, this.cameras.ar);
 
-    data.anchors.forEach(anchor => {
-      if (anchor.type === 'ARPlaneAnchor') {
-        if (this.anchors[anchor.identifier] === undefined) {
-          this.addPlaneMesh(anchor);
-        } else {
-          this.updatePlaneMesh(anchor);
-        }
-      }
-      if (anchor.type === 'ARAnchor') {
-        if (this.anchors[anchor.identifier] === undefined) {
-          this.addMesh(anchor);
-        } else {
-          this.updateMesh(anchor);
-        }
-      }
-    });
+    if (SHOW_STATS) {
+      this.renderStats.update(this.renderer);
+      stats.end();
+    }
   }
 
   addMesh(anchor) {
@@ -215,13 +214,13 @@ class App {
     this.anchors[anchor.identifier].children[0].scale.z = anchor.extent[2];
   }
 
-  renderDev = () => {
-    requestAnimationFrame(this.renderDev);
+  render = () => {
+    requestAnimationFrame(this.render);
     if (SHOW_STATS) {
       stats.begin();
     }
 
-    this.renderer.render(this.scene, this.cameras.dev);
+    this.renderer.render(this.scene, this.cameras.main);
 
     if (SHOW_STATS) {
       this.renderStats.update(this.renderer);
@@ -230,10 +229,18 @@ class App {
   };
 
   onResize = () => {
+    // Add a delay as the screen dimensions are not changed straight away
+    clearTimeout(this.resizeTimeout);
+    this.resizeTimeout = setTimeout(() => {
+      this.resize();
+    }, 300);
+  };
+
+  resize() {
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.cameras.dev.aspect = window.innerWidth / window.innerHeight;
     this.cameras.dev.updateProjectionMatrix();
-  };
+  }
 }
 
 export default new App();
