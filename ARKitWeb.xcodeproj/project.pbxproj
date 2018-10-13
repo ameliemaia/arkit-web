@@ -16,7 +16,9 @@
 		9C4562691F21FB7D00A1472B /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 9C4562671F21FB7D00A1472B /* Main.storyboard */; };
 		9C45626B1F21FB7D00A1472B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 9C45626A1F21FB7D00A1472B /* Assets.xcassets */; };
 		9C45626E1F21FB7D00A1472B /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 9C45626C1F21FB7D00A1472B /* LaunchScreen.storyboard */; };
-		9C8B04801F26299B00618E78 /* www in Resources */ = {isa = PBXBuildFile; fileRef = 9C8B047F1F26299B00618E78 /* www */; };
+		9C4A380A21713CED00158968 /* www in Resources */ = {isa = PBXBuildFile; fileRef = 9C4A380921713CEC00158968 /* www */; };
+		9C4A380C21713CF900158968 /* FullscreenWKWebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C4A380B21713CF900158968 /* FullscreenWKWebView.swift */; };
+		9C736E13217291F9000280F9 /* LightUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C736E12217291F9000280F9 /* LightUtil.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -33,7 +35,9 @@
 		9C45626D1F21FB7D00A1472B /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		9C45626F1F21FB7D00A1472B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		9C4562701F21FB7D00A1472B /* ARKitWeb-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "ARKitWeb-Bridging-Header.h"; sourceTree = "<group>"; };
-		9C8B047F1F26299B00618E78 /* www */ = {isa = PBXFileReference; lastKnownFileType = folder; path = www; sourceTree = "<group>"; };
+		9C4A380921713CEC00158968 /* www */ = {isa = PBXFileReference; lastKnownFileType = folder; path = www; sourceTree = "<group>"; };
+		9C4A380B21713CF900158968 /* FullscreenWKWebView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FullscreenWKWebView.swift; sourceTree = "<group>"; };
+		9C736E12217291F9000280F9 /* LightUtil.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LightUtil.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -67,10 +71,12 @@
 			isa = PBXGroup;
 			children = (
 				9C2973041F61B93800058754 /* ARConfig.swift */,
-				9C8B047F1F26299B00618E78 /* www */,
+				9C4A380921713CEC00158968 /* www */,
 				9C45625E1F21FB7D00A1472B /* AppDelegate.swift */,
+				9C736E12217291F9000280F9 /* LightUtil.swift */,
 				9C4562601F21FB7D00A1472B /* Shaders.metal */,
 				9C4562621F21FB7D00A1472B /* ShaderTypes.h */,
+				9C4A380B21713CF900158968 /* FullscreenWKWebView.swift */,
 				9C4562631F21FB7D00A1472B /* Renderer.swift */,
 				9C4562651F21FB7D00A1472B /* ViewController.swift */,
 				9C4562671F21FB7D00A1472B /* Main.storyboard */,
@@ -141,9 +147,9 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				9C8B04801F26299B00618E78 /* www in Resources */,
 				9C45626E1F21FB7D00A1472B /* LaunchScreen.storyboard in Resources */,
 				9C45626B1F21FB7D00A1472B /* Assets.xcassets in Resources */,
+				9C4A380A21713CED00158968 /* www in Resources */,
 				9C4562691F21FB7D00A1472B /* Main.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -155,7 +161,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9C736E13217291F9000280F9 /* LightUtil.swift in Sources */,
 				9C2973051F61B93800058754 /* ARConfig.swift in Sources */,
+				9C4A380C21713CF900158968 /* FullscreenWKWebView.swift in Sources */,
 				9C4562611F21FB7D00A1472B /* Shaders.metal in Sources */,
 				9C4562641F21FB7D00A1472B /* Renderer.swift in Sources */,
 				9C4562661F21FB7D00A1472B /* ViewController.swift in Sources */,
@@ -298,10 +306,10 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				DEVELOPMENT_TEAM = 646M69BYRD;
-				DEV_URL = "";
+				DEV_URL = "http://192.168.2.11:8080/";
 				INFOPLIST_FILE = ARKitWeb/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = Stinkstudios.ARKitWeb;
+				PRODUCT_BUNDLE_IDENTIFIER = Stinkstudios.ARKitWeb.ixviii;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "ARKitWeb/ARKitWeb-Bridging-Header.h";
 				SWIFT_VERSION = 4.0;
@@ -317,7 +325,7 @@
 				DEV_URL = "";
 				INFOPLIST_FILE = ARKitWeb/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = Stinkstudios.ARKitWeb;
+				PRODUCT_BUNDLE_IDENTIFIER = Stinkstudios.ARKitWeb.ixviii;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "ARKitWeb/ARKitWeb-Bridging-Header.h";
 				SWIFT_VERSION = 4.0;

@@ -421,9 +421,11 @@ class ViewController: UIViewController, MTKViewDelegate, ARSessionDelegate, WKSc
         updateOrientation()
 
         var ambientIntensity: Float = 1.0
+        var ambientColor = [0.0, 0.0, 0.0]
 
         if let lightEstimate = frame.lightEstimate {
             ambientIntensity = Float(lightEstimate.ambientIntensity) / 1000.0
+            ambientColor = kelvinToRGB(temperatureKelvin: frame.lightEstimate!.ambientColorTemperature)
         }
 
         // Store all data in dict, parse as json to send to the web view
@@ -432,6 +434,7 @@ class ViewController: UIViewController, MTKViewDelegate, ARSessionDelegate, WKSc
         data["camera"] = self.getCameraData(camera: frame.camera)
         data["anchors"] = self.getAnchorsData(anchors: frame.anchors)
         data["ambientIntensity"] = ambientIntensity
+        data["ambientColor"] = ambientColor
 
         if (ARConfig.imageFrame) {
             data["image"] = imageUtil.getImageData(pixelBuffer: frame.capturedImage, uiOrientation: orientation)

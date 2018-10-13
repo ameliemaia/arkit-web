@@ -9,7 +9,7 @@ import {
   AmbientLight,
   DirectionalLight
 } from 'three';
-import '../gui';
+import gui from '../gui';
 import OrbitControls from '../../lib/OrbitControls';
 import ARKit from '../../arkit/arkit';
 import ARConfig from '../../arkit/config';
@@ -69,6 +69,12 @@ class App {
     this.scene.add(this.lights.ambient);
     this.scene.add(this.lights.directional);
 
+    this.ambientColor = '#ff0000';
+    gui
+      .addColor(this, 'ambientColor')
+      .name('ambient color')
+      .listen();
+
     // Stats
     if (SHOW_STATS) {
       this.renderStats = new RenderStats();
@@ -116,6 +122,14 @@ class App {
 
   onARFrame = data => {
     this.lights.ambient.intensity = data.ambientIntensity;
+    this.lights.ambient.color.setRGB(
+      data.ambientColor[0] / 255,
+      data.ambientColor[1] / 255,
+      data.ambientColor[2] / 255
+    );
+
+    this.ambientColor = `#${this.lights.ambient.color.getHexString()}`;
+
     this.cameras.ar.update(data.camera);
 
     data.anchors.forEach(anchor => {
