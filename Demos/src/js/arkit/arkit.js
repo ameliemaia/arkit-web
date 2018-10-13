@@ -82,10 +82,10 @@ const ARKit = new class ARKitInterface {
   /**
    * Add an anchor to the scene
    */
-  addAnchor() {
+  addAnchor(position = []) {
     const data = {
       action: 'addAnchor',
-      value: null
+      value: position
     };
     this.postMessage(data);
   }

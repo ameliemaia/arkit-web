@@ -18,7 +18,7 @@ extension MTKView : RenderDestinationProvider {
 class ViewController: UIViewController, MTKViewDelegate, ARSessionDelegate, WKScriptMessageHandler {
 
     let DEBUG = true
-    let DEFAULT_DEMO = "index"
+    let DEFAULT_DEMO = "plane-anchor"
 
     var session: ARSession!
     var renderer: Renderer!
@@ -137,24 +137,23 @@ class ViewController: UIViewController, MTKViewDelegate, ARSessionDelegate, WKSc
 
     /**
      Add an anchor to the session
+     The x, y, z coordinates should be in world space
      The tap is currently initiated from the web view since it captures all guestures
 
      Reference: https://developer.apple.com/documentation/arkit/aranchor
      */
-    func addAnchor() {
-        if let currentFrame = session.currentFrame {
-            // Create a transform with a translation of 0.2 meters in front of the camera
-            var translation = matrix_identity_float4x4
-            translation.columns.3.z = -1
-            let transform = simd_mul(currentFrame.camera.transform, translation)
+    func addAnchor(x: Float, y: Float, z: Float) {
+        var transform = matrix_identity_float4x4
+        transform.columns.3.x = x
+        transform.columns.3.y = y
+        transform.columns.3.z = z
 
-            // Add a new anchor to the session
-            let anchor = ARAnchor(transform: transform)
+        // Add a new anchor to the session
+        let anchor = ARAnchor(transform: transform)
 
-            // print("addAnchor \(anchor.identifier)")
+        // print("addAnchor \(anchor.identifier)")
 
-            session.add(anchor: anchor)
-        }
+        session.add(anchor: anchor)
     }
 
     func removeAnchors(identifiers: [NSString]) {
@@ -354,7 +353,11 @@ class ViewController: UIViewController, MTKViewDelegate, ARSessionDelegate, WKSc
                 let config = data["value"] as! NSDictionary
                 self.updateARConfig(config: config)
             case "addAnchor":
-                self.addAnchor()
+                let point = data["value"] as! NSArray
+                let x = point[0] as! NSNumber
+                let y = point[1] as! NSNumber
+                let z = point[2] as! NSNumber
+                self.addAnchor(x: x.floatValue, y: y.floatValue, z: z.floatValue)
             case "removeAnchors":
                 let identifiers = data["value"] as! [NSString]
                 self.removeAnchors(identifiers: identifiers)
