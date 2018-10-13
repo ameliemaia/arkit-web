@@ -3,41 +3,28 @@
   "version": "0.0.0",
   "description": "arkit-web",
   "scripts": {
-    "start":
-      "yarn run build:clean; concurrently 'yarn run assets' 'yarn run server' 'yarn run watch:js' 'yarn run watch:html'",
-    "server":
-      "live-server ../ARKitWeb/www --port 3000 --quiet --watch ../ARKitWeb/www --watch ./src --wait 0",
-    "watch:js":
-      "cross-env NODE_ENV=development webpack --config webpack.config.js --colors --watch",
-    "watch:html":
-      "pug --watch ./src/templates/*.pug --silent --obj ./config.js --pretty --out ../ARKitWeb/www",
-    "build":
-      "yarn run build:clean; yarn run assets; yarn run build:js; yarn run build:html;",
-    "build:js":
-      "cross-env NODE_ENV=production webpack --config webpack.config.js --colors;",
-    "build:html":
-      "cross-env NODE_ENV=production pug ./src/templates/*.pug --obj ./config.js --pretty --out ../ARKitWeb/www",
+    "start": "npm run build:clean; concurrently 'npm run assets' 'npm run server' 'npm run watch:js' 'npm run watch:html'",
+    "server": "live-server ../ARKitWeb/www --port 3000 --quiet --watch ../ARKitWeb/www --watch ./src --wait 0",
+    "watch:js": "cross-env NODE_ENV=development webpack --config webpack.config.js --colors --watch",
+    "watch:html": "pug --watch ./src/templates/*.pug --silent --obj ./config.js --pretty --out ../ARKitWeb/www",
+    "build": "npm run build:clean; npm run assets; npm run build:js; npm run build:html;",
+    "build:js": "cross-env NODE_ENV=production webpack --config webpack.config.js --colors;",
+    "build:html": "cross-env NODE_ENV=production pug ./src/templates/*.pug --obj ./config.js --pretty --out ../ARKitWeb/www",
     "build:clean": "rm -rf ../ARKitWeb/www/*",
-    "assets":
-      "mkdir -p ../ARKitWeb/www/assets; cp -R ./assets/ ../ARKitWeb/www/assets;",
-    "prettier":
-      "prettier --write --single-quote --print-width 80 './src/js/**/*.js'",
-    "prettier:internals":
-      "prettier --write --single-quote --print-width 80 \"internals/**/*.js\"",
-    "formatting": "yarn run prettier && yarn run prettier:internals",
-    "lint:fix":
-      "eslint --config .eslintrc.json --ext .js ./src/js --cache --fix",
-    "lint":
-      "eslint --config .eslintrc.json --ext .js ./src/js ./internals --cache",
-    "precommit": "yarn run lint",
+    "assets": "mkdir -p ../ARKitWeb/www/assets; cp -R ./assets/ ../ARKitWeb/www/assets;",
+    "prettier": "prettier --write --single-quote --print-width 80 './src/js/**/*.js'",
+    "prettier:internals": "prettier --write --single-quote --print-width 80 \"internals/**/*.js\"",
+    "formatting": "npm run prettier && npm run prettier:internals",
+    "lint:fix": "eslint --config .eslintrc.json --ext .js ./src/js --cache --fix",
+    "lint": "eslint --config .eslintrc.json --ext .js ./src/js ./internals --cache",
+    "precommit": "npm run lint",
     "tunnel": "ngrok http 8080"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/Stinkstudios/arkit-web.git"
   },
-  "author":
-    "Amelie Rosser <amelierosser1986@gmail.com> (https://www.ixviii.io/)",
+  "author": "Amelie Rosser <amelierosser1986@gmail.com> (https://www.ixviii.io/)",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/Stinkstudios/arkit-web/issues"
@@ -45,8 +32,7 @@
   "homepage": "https://github.com/Stinkstudios/arkit-web",
   "engines": {
     "node": "^8.5.0",
-    "npm": "^4.2.0",
-    "yarn": "^0.27.5"
+    "npm": "^4.2.0"
   },
   "devDependencies": {
     "babel-core": "^6.26.0",

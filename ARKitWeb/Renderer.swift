@@ -273,7 +273,7 @@ class Renderer {
         uniforms.pointee.viewMatrix = simd_inverse(frame.camera.transform)
         let zNear = CGFloat(ARConfig.camera.near)
         let zFar = CGFloat(ARConfig.camera.far)
-        uniforms.pointee.projectionMatrix = frame.camera.projectionMatrix(for: .landscapeRight, viewportSize: viewportSize, zNear: zNear, zFar: zFar)
+        uniforms.pointee.projectionMatrix = frame.camera.projectionMatrix(for: UIApplication.shared.statusBarOrientation, viewportSize: viewportSize, zNear: zNear, zFar: zFar)
 
         // Set up lighting for the scene using the ambient intensity if provided
         var ambientIntensity: Float = 1.0
@@ -352,7 +352,7 @@ class Renderer {
 
     func updateImagePlane(frame: ARFrame) {
         // Update the texture coordinates of our image plane to aspect fill the viewport
-        let displayToCameraTransform = frame.displayTransform(for: .landscapeRight, viewportSize: viewportSize).inverted()
+        let displayToCameraTransform = frame.displayTransform(for: UIApplication.shared.statusBarOrientation, viewportSize: viewportSize).inverted()
 
         let vertexData = imagePlaneVertexBuffer.contents().assumingMemoryBound(to: Float.self)
         for index in 0...3 {

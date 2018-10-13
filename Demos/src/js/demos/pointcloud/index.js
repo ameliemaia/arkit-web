@@ -44,6 +44,8 @@ class App {
       dev: new PerspectiveCamera(fov, ratio, near, far),
       ar: new ARCamera()
     };
+    this.cameras.main = IS_NATIVE ? this.cameras.ar : this.cameras.dev;
+
     this.cameras.dev.position.set(1 * zoom, 0.75 * zoom, 1 * zoom);
     this.cameras.dev.lookAt(new Vector3());
 
@@ -62,6 +64,9 @@ class App {
       document.body.appendChild(stats.domElement);
     }
 
+    // Resize timeout id
+    this.resizeTimeout = 0;
+
     this.addObjects();
     this.bindListeners();
     this.onResize();
@@ -73,8 +78,8 @@ class App {
       );
       this.scene.add(new GridHelper());
       this.scene.add(new AxisHelper());
-      this.renderDev();
     }
+    this.render();
   }
 
   addObjects() {
@@ -91,17 +96,10 @@ class App {
   }
 
   onARFrame = data => {
-    if (SHOW_STATS) {
-      stats.begin();
-    }
+    this.cameras.ar.update(data.camera);
 
-    this.update(data);
-
-    this.renderer.render(this.scene, this.cameras.ar);
-
-    if (SHOW_STATS) {
-      this.renderStats.update(this.renderer);
-      stats.end();
+    if (data.pointCloud) {
+      this.pointCloud.update(data.pointCloud.points);
     }
   };
 
@@ -117,24 +115,13 @@ class App {
     );
   };
 
-  update(data) {
-    this.cameras.ar.matrixWorldInverse.fromArray(
-      data.camera.matrixWorldInverse
-    );
-    this.cameras.ar.projectionMatrix.fromArray(data.camera.projection);
-
-    if (data.pointCloud) {
-      this.pointCloud.update(data.pointCloud.points);
-    }
-  }
-
-  renderDev = () => {
-    requestAnimationFrame(this.renderDev);
+  render = () => {
+    requestAnimationFrame(this.render);
     if (SHOW_STATS) {
       stats.begin();
     }
 
-    this.renderer.render(this.scene, this.cameras.dev);
+    this.renderer.render(this.scene, this.cameras.main);
 
     if (SHOW_STATS) {
       this.renderStats.update(this.renderer);
@@ -143,10 +130,18 @@ class App {
   };
 
   onResize = () => {
+    // Add a delay as the screen dimensions are not changed straight away
+    clearTimeout(this.resizeTimeout);
+    this.resizeTimeout = setTimeout(() => {
+      this.resize();
+    }, 300);
+  };
+
+  resize() {
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.cameras.dev.aspect = window.innerWidth / window.innerHeight;
     this.cameras.dev.updateProjectionMatrix();
-  };
+  }
 }
 
 export default new App();
