@@ -11,10 +11,12 @@ let demo = path[path.length - 1].replace('.html', '').replace('/', '');
 demo = demo === '' || demo === 'index' ? demos[0] : demo;
 
 const controller = {
+  framework: 'ARKit Web',
   demo
 };
 
 const gui = new dat.GUI();
+gui.add(controller, 'framework');
 gui.open();
 
 gui.add(controller, 'demo', demos).onChange(value => {
