@@ -3,7 +3,7 @@
 //  KikkAR
 //
 //  Created by Amelie Rosser on 06/10/2018.
-//  Copyright © 2018 KIKK. All rights reserved.
+//  Copyright © 2018. All rights reserved.
 //
 
 import Foundation
