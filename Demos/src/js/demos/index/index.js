@@ -2,24 +2,40 @@ import {
   WebGLRenderer,
   Scene,
   PerspectiveCamera,
-  Object3D,
   Vector3,
   GridHelper,
   AxisHelper,
   AmbientLight,
-  DirectionalLight
+  DirectionalLight,
+  Matrix4,
+  BoxBufferGeometry,
+  MeshLambertMaterial,
+  Color,
+  Mesh
 } from 'three';
 import '../gui';
 import OrbitControls from '../../lib/OrbitControls';
 import ARKit from '../../arkit/arkit';
 import ARConfig from '../../arkit/config';
 import ARCamera from '../../arkit/camera';
-import ARAnchorCube from '../../objects/anchor-cube';
-import ARAnchorPlane from '../../objects/anchor-plane';
+import {
+  ARAnchor,
+  ARAnchorPlane,
+  AR_PLANE_ANCHOR
+} from '../../objects/anchors';
 import { IS_NATIVE } from '../../arkit/constants';
 import RenderStats from '../../lib/render-stats';
 import stats from '../../lib/stats';
 import TouchControls from '../../lib/touch-controls';
+
+// Use same geometry for all cubes
+const anchorSize = 0.1; // 10cm
+const anchorGeometry = new BoxBufferGeometry(
+  anchorSize,
+  anchorSize,
+  anchorSize
+);
+anchorGeometry.applyMatrix(new Matrix4().makeTranslation(0, anchorSize / 2, 0));
 
 const SHOW_STATS = false;
 
@@ -119,19 +135,10 @@ class App {
     this.cameras.ar.update(data.camera);
 
     data.anchors.forEach(anchor => {
-      if (anchor.type === 'ARPlaneAnchor') {
-        if (this.anchors[anchor.identifier] === undefined) {
-          this.addPlaneMesh(anchor);
-        } else {
-          this.updatePlaneMesh(anchor);
-        }
-      }
-      if (anchor.type === 'ARAnchor') {
-        if (this.anchors[anchor.identifier] === undefined) {
-          this.addMesh(anchor);
-        } else {
-          this.updateMesh(anchor);
-        }
+      if (this.anchors[anchor.identifier] === undefined) {
+        this.addARAnchor(anchor);
+      } else {
+        this.updateARAnchor(anchor);
       }
     });
   };
@@ -143,10 +150,37 @@ class App {
   onARAnchorsRemoved = data => {
     data.anchors.forEach(anchor => {
       if (this.anchors[anchor.identifier]) {
-        this.scene.remove(this.anchors[anchor.identifier]);
+        this.scene.remove(this.anchors[anchor.identifier].group);
       }
     });
   };
+
+  addARAnchor(anchor) {
+    switch (anchor.type) {
+      case AR_PLANE_ANCHOR: {
+        this.anchors[anchor.identifier] = new ARAnchorPlane(anchor);
+        break;
+      }
+      default: {
+        const mesh = new Mesh(
+          anchorGeometry,
+          new MeshLambertMaterial({
+            color: new Color().setHSL(Math.random(), 0.5, 0.7)
+          })
+        );
+        this.anchors[anchor.identifier] = new ARAnchor(anchor);
+        this.anchors[anchor.identifier].group.add(mesh);
+        break;
+      }
+    }
+
+    console.log('adding', anchor.identifier); // eslint-disable-line
+    this.scene.add(this.anchors[anchor.identifier].group);
+  }
+
+  updateARAnchor(anchor) {
+    this.anchors[anchor.identifier].update(anchor);
+  }
 
   onARSessionInterupted = () => {
     this.ui.interruptedOverlay.classList.add(
@@ -161,7 +195,17 @@ class App {
   };
 
   onTouch = () => {
-    ARKit.addAnchor();
+    const transform = new Matrix4();
+    transform.compose(
+      this.cameras.main.position,
+      this.cameras.main.quaternion,
+      new Vector3(1, 1, 1)
+    );
+    const forward = new Matrix4();
+    // Position in front of camera 50cm
+    forward.setPosition(new Vector3(0, 0, -0.5));
+    transform.multiply(forward);
+    ARKit.addAnchor(transform.toArray());
   };
 
   update() {
@@ -175,43 +219,6 @@ class App {
       this.renderStats.update(this.renderer);
       stats.end();
     }
-  }
-
-  addMesh(anchor) {
-    console.log('adding', anchor.identifier); // eslint-disable-line
-
-    // Returns a mesh instance
-    this.anchors[anchor.identifier] = new ARAnchorCube();
-    this.anchors[anchor.identifier].matrixAutoUpdate = false;
-    this.anchors[anchor.identifier].matrix.fromArray(anchor.transform);
-    this.scene.add(this.anchors[anchor.identifier]);
-  }
-
-  addPlaneMesh(anchor) {
-    console.log('adding', anchor.identifier); // eslint-disable-line
-
-    this.anchors[anchor.identifier] = new Object3D();
-
-    // Returns a mesh instance
-    const mesh = new ARAnchorPlane(anchor);
-
-    this.anchors[anchor.identifier].add(mesh);
-    this.anchors[anchor.identifier].matrixAutoUpdate = false;
-    this.anchors[anchor.identifier].matrix.fromArray(anchor.transform);
-    this.scene.add(this.anchors[anchor.identifier]);
-  }
-
-  updateMesh(anchor) {
-    this.anchors[anchor.identifier].matrix.fromArray(anchor.transform);
-  }
-
-  updatePlaneMesh(anchor) {
-    this.anchors[anchor.identifier].matrix.fromArray(anchor.transform);
-    this.anchors[anchor.identifier].children[0].position.fromArray(
-      anchor.center
-    );
-    this.anchors[anchor.identifier].children[0].scale.x = anchor.extent[0];
-    this.anchors[anchor.identifier].children[0].scale.z = anchor.extent[2];
   }
 
   render = () => {

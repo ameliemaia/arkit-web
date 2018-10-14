@@ -2,25 +2,32 @@ import {
   WebGLRenderer,
   Scene,
   PerspectiveCamera,
-  Object3D,
   Vector3,
   GridHelper,
   AxisHelper,
   AmbientLight,
-  DirectionalLight
+  DirectionalLight,
+  Matrix4,
+  BoxBufferGeometry,
+  Mesh,
+  MeshNormalMaterial
 } from 'three';
 import '../gui';
 import OrbitControls from '../../lib/OrbitControls';
 import ARKit from '../../arkit/arkit';
 import ARConfig from '../../arkit/config';
 import ARCamera from '../../arkit/camera';
-import ARAnchorPlane from '../../objects/anchor-plane';
+import {
+  ARAnchorPlane,
+  ARAnchor,
+  AR_ANCHOR,
+  AR_PLANE_ANCHOR
+} from '../../objects/anchors';
 import ARPlaneIndicator from '../../objects/plane-indicator';
 import { IS_NATIVE } from '../../arkit/constants';
 import RenderStats from '../../lib/render-stats';
 import stats from '../../lib/stats';
 import TouchControls from '../../lib/touch-controls';
-import ARAnchorCube from '../../objects/anchor-cube';
 
 const SHOW_STATS = false;
 
@@ -74,6 +81,15 @@ class App {
     this.scene.add(this.lights.ambient);
     this.scene.add(this.lights.directional);
 
+    // Use same geometry for all cubes
+    const anchorSize = 0.1; // 10cm
+    const geometry = new BoxBufferGeometry(anchorSize, anchorSize, anchorSize);
+    geometry.applyMatrix(new Matrix4().makeTranslation(0, anchorSize / 2, 0));
+
+    this.anchorMesh = new Mesh(geometry, new MeshNormalMaterial());
+    this.anchorMesh.visible = false;
+    this.scene.add(this.anchorMesh);
+
     // Stats
     if (SHOW_STATS) {
       this.renderStats = new RenderStats();
@@ -106,12 +122,6 @@ class App {
       this.scene.add(new AxisHelper());
     }
     this.render();
-
-    // this.addPlaneMesh({
-    //   identifier: 'xx',
-    //   center: [0, 0, 0],
-    //   extent: [5, 5, 5]
-    // });
   }
 
   bindListeners() {
@@ -130,19 +140,10 @@ class App {
     this.cameras.ar.update(data.camera);
 
     data.anchors.forEach(anchor => {
-      if (anchor.type === 'ARPlaneAnchor') {
-        if (this.anchors[anchor.identifier] === undefined) {
-          this.addPlaneMesh(anchor);
-        } else {
-          this.updatePlaneMesh(anchor);
-        }
-      }
-      if (anchor.type === 'ARAnchor') {
-        if (this.anchors[anchor.identifier] === undefined) {
-          this.addMesh(anchor);
-        } else {
-          this.updateMesh(anchor);
-        }
+      if (this.anchors[anchor.identifier] === undefined) {
+        this.addARAnchor(anchor);
+      } else {
+        this.updateARAnchor(anchor);
       }
     });
 
@@ -156,7 +157,7 @@ class App {
   onARAnchorsRemoved = data => {
     data.anchors.forEach(anchor => {
       if (this.anchors[anchor.identifier]) {
-        this.scene.remove(this.anchors[anchor.identifier]);
+        this.scene.remove(this.anchors[anchor.identifier].group);
       }
     });
   };
@@ -176,7 +177,14 @@ class App {
   onTouch = () => {
     if (this.planeIndicator.tracking) {
       const position = this.planeIndicator.getPosition();
-      ARKit.addAnchor(position);
+      const anchors = Object.values(this.anchors).filter(
+        anchor => anchor.type === AR_ANCHOR
+      );
+      const identifiers = anchors.map(anchor => anchor.identifier);
+      ARKit.removeAnchors(identifiers);
+      const transform = new Matrix4();
+      transform.makeTranslation(position.x, position.y, position.z);
+      ARKit.addAnchor(transform.toArray());
     }
   };
 
@@ -193,42 +201,26 @@ class App {
     }
   }
 
-  addMesh(anchor) {
+  addARAnchor(anchor) {
+    switch (anchor.type) {
+      case AR_PLANE_ANCHOR: {
+        this.anchors[anchor.identifier] = new ARAnchorPlane(anchor);
+        break;
+      }
+      default: {
+        this.anchors[anchor.identifier] = new ARAnchor(anchor);
+        this.anchorMesh.visible = true;
+        this.anchors[anchor.identifier].group.add(this.anchorMesh);
+        break;
+      }
+    }
+
     console.log('adding', anchor.identifier); // eslint-disable-line
-
-    // Returns a mesh instance
-    this.anchors[anchor.identifier] = new ARAnchorCube();
-    this.anchors[anchor.identifier].matrixAutoUpdate = false;
-    this.anchors[anchor.identifier].matrix.fromArray(anchor.transform);
-    this.scene.add(this.anchors[anchor.identifier]);
+    this.scene.add(this.anchors[anchor.identifier].group);
   }
 
-  addPlaneMesh(anchor) {
-    console.log('adding', anchor.identifier); // eslint-disable-line
-
-    this.anchors[anchor.identifier] = new Object3D();
-    this.anchors[anchor.identifier].type = anchor.type;
-
-    // Returns a mesh instance
-    const mesh = new ARAnchorPlane(anchor);
-
-    this.anchors[anchor.identifier].add(mesh);
-    this.anchors[anchor.identifier].matrixAutoUpdate = false;
-    this.anchors[anchor.identifier].matrix.fromArray(anchor.transform);
-    this.scene.add(this.anchors[anchor.identifier]);
-  }
-
-  updateMesh(anchor) {
-    this.anchors[anchor.identifier].matrix.fromArray(anchor.transform);
-  }
-
-  updatePlaneMesh(anchor) {
-    this.anchors[anchor.identifier].matrix.fromArray(anchor.transform);
-    this.anchors[anchor.identifier].children[0].position.fromArray(
-      anchor.center
-    );
-    this.anchors[anchor.identifier].children[0].scale.x = anchor.extent[0];
-    this.anchors[anchor.identifier].children[0].scale.z = anchor.extent[2];
+  updateARAnchor(anchor) {
+    this.anchors[anchor.identifier].update(anchor);
   }
 
   render = () => {

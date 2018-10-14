@@ -6,8 +6,9 @@ import {
   Matrix4,
   ShaderMaterial
 } from 'three';
+import { AR_PLANE_ANCHOR } from './anchors';
 
-const size = 0.1;
+const size = 0.1; // 10cm
 const geometry = new PlaneBufferGeometry(size, size, 1, 1);
 geometry.applyMatrix(new Matrix4().makeRotationX(-Math.PI / 2));
 
@@ -36,8 +37,8 @@ export default class ARPlaneIndicator {
           }
 
           void main() {
-            float rect = sdRect(vUv, vec2(0.1), vec2(0.9));
-            gl_FragColor = vec4(vec3(rect), 1.0 - rect);
+            float rect = 1.0 - sdRect(vUv, vec2(0.1), vec2(0.9));
+            gl_FragColor = vec4(rect);
           }
         `,
         transparent: true
@@ -49,8 +50,8 @@ export default class ARPlaneIndicator {
     this.objects = [];
 
     anchors.forEach(anchor => {
-      if (anchor.type === 'ARPlaneAnchor') {
-        this.objects.push(anchor.children[0]);
+      if (anchor.type === AR_PLANE_ANCHOR) {
+        this.objects.push(anchor.mesh);
       }
     });
 
@@ -62,6 +63,8 @@ export default class ARPlaneIndicator {
       this.mesh.visible = true;
       this.tracking = true;
       this.mesh.position.copy(intersect.point);
+      // Add an offset to the y so the mesh doesn't clip with the AR Plane mesh
+      this.mesh.position.y += 0.0001;
     } else {
       this.mesh.visible = false;
       this.tracking = false;
@@ -69,6 +72,6 @@ export default class ARPlaneIndicator {
   }
 
   getPosition() {
-    return this.mesh.position.toArray();
+    return this.mesh.position;
   }
 }

@@ -8,21 +8,27 @@ import {
   GridHelper,
   AxisHelper,
   PCFSoftShadowMap,
-  Math as MathUtils,
   AmbientLight,
   DirectionalLight,
-  SpotLight
+  SpotLight,
+  Matrix4
 } from 'three';
 import '../gui';
 import OrbitControls from '../../lib/OrbitControls';
 import ARKit from '../../arkit/arkit';
 import ARConfig from '../../arkit/config';
 import ARCamera from '../../arkit/camera';
-import ARAnchorPlane from '../../objects/anchor-plane';
+import {
+  ARAnchorPlane,
+  ARAnchor,
+  AR_PLANE_ANCHOR,
+  AR_ANCHOR
+} from '../../objects/anchors';
 import { IS_NATIVE } from '../../arkit/constants';
 import RenderStats from '../../lib/render-stats';
 import stats from '../../lib/stats';
 import TouchControls from '../../lib/touch-controls';
+import ARPlaneIndicator from '../../objects/plane-indicator';
 
 // Objects
 import Floor from './objects/floor/floor';
@@ -70,14 +76,13 @@ class App {
     };
 
     // Lights
-
     this.lights = {
       ambient: new AmbientLight(0xd4d4d4),
       directional: new DirectionalLight(0xffffff, 1),
       spot: new SpotLight(0xffffff, 1)
     };
 
-    this.lights.spot.position.set(0.95, 0.95, 0.95);
+    this.lights.spot.position.set(0.25, 0.95, 0.25);
 
     this.lights.spot.castShadow = true;
     this.lights.spot.shadow.mapSize.width = 1024;
@@ -90,6 +95,10 @@ class App {
     this.scene.add(this.lights.ambient);
     this.scene.add(this.lights.directional);
     this.scene.add(this.lights.spot);
+
+    // Plane indicator
+    this.planeIndicator = new ARPlaneIndicator();
+    this.scene.add(this.planeIndicator.mesh);
 
     // Stats
     if (SHOW_STATS) {
@@ -114,6 +123,7 @@ class App {
     this.floorVector = new Vector3(0, Infinity, 0);
     this.floorPositionY = Infinity;
     this.container = new Object3D();
+    this.container.visible = false;
     this.scene.add(this.container);
 
     this.addObjects();
@@ -156,7 +166,7 @@ class App {
 
   bindListeners() {
     window.addEventListener('resize', this.onResize, false);
-    this.touchControls.on('move', this.onTouchMove);
+    this.touchControls.on('end', this.onTouch);
 
     ARKit.on('frame', this.onARFrame);
     ARKit.on('anchorsAdded', this.onARAnchorsAdded);
@@ -170,23 +180,19 @@ class App {
     this.cameras.ar.update(data.camera);
 
     data.anchors.forEach(anchor => {
-      if (anchor.type === 'ARPlaneAnchor') {
-        if (this.anchors[anchor.identifier] === undefined) {
-          this.addPlaneMesh(anchor);
-        } else {
-          this.updatePlaneMesh(anchor);
-        }
+      if (this.anchors[anchor.identifier] === undefined) {
+        this.addARAnchor(anchor);
+      } else {
+        this.updateARAnchor(anchor);
       }
     });
 
-    this.updateFloorPosition();
+    this.planeIndicator.update(this.cameras.ar, Object.values(this.anchors));
   };
 
   removeAnchors = () => {
     console.log('remove all anchors'); // eslint-disable-line no-console
-
     const identifiers = Object.keys(this.anchors);
-
     ARKit.removeAnchors(identifiers);
   };
 
@@ -214,53 +220,42 @@ class App {
     );
   };
 
-  onTouchMove = event => {
-    // Position
-    this.lights.spot.position.x = MathUtils.lerp(-2, 2, event[0].x);
-    this.lights.spot.position.z = MathUtils.lerp(-2, 2, event[0].y);
-    // Direction
-    this.lights.directional.position.x = MathUtils.lerp(-1, 1, event[0].x);
-    this.lights.directional.position.z = MathUtils.lerp(-1, 1, event[0].y);
+  onTouch = () => {
+    if (this.planeIndicator.tracking) {
+      const position = this.planeIndicator.getPosition();
+      const anchors = Object.values(this.anchors).filter(
+        anchor => anchor.type === AR_ANCHOR
+      );
+      const identifiers = anchors.map(anchor => anchor.identifier);
+      ARKit.removeAnchors(identifiers);
+      const transform = new Matrix4();
+      transform.makeTranslation(position.x, position.y, position.z);
+      ARKit.addAnchor(transform.toArray());
+    }
   };
 
-  updateFloorPosition() {
-    // Get lowest ARAnchorPosition for the floor
-    Object.values(this.anchors).forEach(anchor => {
-      if (anchor.anchorType === 'ARPlaneAnchor') {
-        this.floorVector.setFromMatrixPosition(anchor.matrixWorld);
-
-        if (this.floorVector.y < this.floorPositionY) {
-          this.floorPositionY = this.floorVector.y;
-        }
+  addARAnchor(anchor) {
+    switch (anchor.type) {
+      case AR_PLANE_ANCHOR: {
+        this.anchors[anchor.identifier] = new ARAnchorPlane(anchor);
+        // Hide the grid mesh
+        this.anchors[anchor.identifier].group.visible = false;
+        break;
       }
-    });
+      default: {
+        this.anchors[anchor.identifier] = new ARAnchor(anchor);
+        this.anchors[anchor.identifier].group.add(this.container);
+        this.container.visible = true;
+        break;
+      }
+    }
 
-    this.container.position.y = this.floorPositionY;
-  }
-
-  addPlaneMesh(anchor) {
     console.log('adding', anchor.identifier); // eslint-disable-line
-
-    this.anchors[anchor.identifier] = new Object3D();
-    this.anchors[anchor.identifier].anchorType = 'ARPlaneAnchor';
-
-    // Returns a mesh instance
-    const mesh = new ARAnchorPlane(anchor);
-    mesh.visible = false;
-
-    this.anchors[anchor.identifier].add(mesh);
-    this.anchors[anchor.identifier].matrixAutoUpdate = false;
-    this.anchors[anchor.identifier].matrix.fromArray(anchor.transform);
-    this.scene.add(this.anchors[anchor.identifier]);
+    this.scene.add(this.anchors[anchor.identifier].group);
   }
 
-  updatePlaneMesh(anchor) {
-    this.anchors[anchor.identifier].matrix.fromArray(anchor.transform);
-    this.anchors[anchor.identifier].children[0].position.fromArray(
-      anchor.center
-    );
-    this.anchors[anchor.identifier].children[0].scale.x = anchor.extent[0];
-    this.anchors[anchor.identifier].children[0].scale.z = anchor.extent[2];
+  updateARAnchor(anchor) {
+    this.anchors[anchor.identifier].update(anchor);
   }
 
   render = () => {

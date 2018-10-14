@@ -81,11 +81,12 @@ const ARKit = new class ARKitInterface {
 
   /**
    * Add an anchor to the scene
+   * @param {Array} a 4x4 matrix transform
    */
-  addAnchor(position = []) {
+  addAnchor(transform = []) {
     const data = {
       action: 'addAnchor',
-      value: position
+      value: transform
     };
     this.postMessage(data);
   }
@@ -106,6 +107,16 @@ const ARKit = new class ARKitInterface {
     const data = {
       action: 'loadPage',
       value
+    };
+    this.postMessage(data);
+  }
+
+  /**
+   * Reset the AR session and clear any existing anchors
+   */
+  resetSession() {
+    const data = {
+      action: 'resetSession'
     };
     this.postMessage(data);
   }
