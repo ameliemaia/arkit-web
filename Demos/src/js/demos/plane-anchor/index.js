@@ -2,16 +2,15 @@ import {
   WebGLRenderer,
   Scene,
   PerspectiveCamera,
-  Object3D,
-  Vector2,
   Vector3,
   GridHelper,
   AxisHelper,
-  PCFSoftShadowMap,
   AmbientLight,
   DirectionalLight,
-  SpotLight,
-  Matrix4
+  Matrix4,
+  BoxBufferGeometry,
+  Mesh,
+  MeshNormalMaterial
 } from 'three';
 import '../gui';
 import OrbitControls from '../../lib/OrbitControls';
@@ -21,20 +20,15 @@ import ARCamera from '../../arkit/camera';
 import {
   ARAnchorPlane,
   ARAnchor,
-  AR_PLANE_ANCHOR,
-  AR_ANCHOR
+  AR_ANCHOR,
+  AR_PLANE_ANCHOR
 } from '../../objects/anchors';
+import ARPlaneIndicator from '../../objects/plane-indicator';
 import { IS_NATIVE } from '../../arkit/constants';
 import RenderStats from '../../lib/render-stats';
 import stats from '../../lib/stats';
 import TouchControls from '../../lib/touch-controls';
-import ARPlaneIndicator from '../../objects/plane-indicator';
 
-// Objects
-import Floor from './objects/floor/floor';
-import Primitive from './objects/primitive/primitive';
-
-// Constants
 const SHOW_STATS = false;
 
 class App {
@@ -47,8 +41,6 @@ class App {
     this.renderer = new WebGLRenderer({
       alpha: true
     });
-    this.renderer.shadowMap.enabled = true;
-    this.renderer.shadowMap.type = PCFSoftShadowMap;
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(this.renderer.domElement);
 
@@ -60,7 +52,7 @@ class App {
     const ratio = window.innerWidth / window.innerHeight;
     const near = 0.1;
     const far = 1000;
-    const zoom = 1;
+    const zoom = 0.5;
     this.cameras = {
       dev: new PerspectiveCamera(fov, ratio, near, far),
       ar: new ARCamera()
@@ -78,27 +70,25 @@ class App {
     // Lights
     this.lights = {
       ambient: new AmbientLight(0xd4d4d4),
-      directional: new DirectionalLight(0xffffff, 1),
-      spot: new SpotLight(0xffffff, 1)
+      directional: new DirectionalLight(0xffffff, 0.6)
     };
-
-    this.lights.spot.position.set(0.25, 0.95, 0.25);
-
-    this.lights.spot.castShadow = true;
-    this.lights.spot.shadow.mapSize.width = 1024;
-    this.lights.spot.shadow.mapSize.height = 1024;
-
-    this.lights.spot.shadow.camera.near = 1;
-    this.lights.spot.shadow.camera.far = 500;
-    this.lights.spot.shadow.camera.fov = 60;
-
-    this.scene.add(this.lights.ambient);
-    this.scene.add(this.lights.directional);
-    this.scene.add(this.lights.spot);
 
     // Plane indicator
     this.planeIndicator = new ARPlaneIndicator();
     this.scene.add(this.planeIndicator.mesh);
+
+    this.lights.directional.position.set(1, 1, 1);
+    this.scene.add(this.lights.ambient);
+    this.scene.add(this.lights.directional);
+
+    // Use same geometry for all cubes
+    const anchorSize = 0.1; // 10cm
+    const geometry = new BoxBufferGeometry(anchorSize, anchorSize, anchorSize);
+    geometry.applyMatrix(new Matrix4().makeTranslation(0, anchorSize / 2, 0));
+
+    this.anchorMesh = new Mesh(geometry, new MeshNormalMaterial());
+    this.anchorMesh.visible = false;
+    this.scene.add(this.anchorMesh);
 
     // Stats
     if (SHOW_STATS) {
@@ -120,13 +110,6 @@ class App {
     // identifier is the key
     this.anchors = {};
 
-    this.floorVector = new Vector3(0, Infinity, 0);
-    this.floorPositionY = Infinity;
-    this.container = new Object3D();
-    this.container.visible = false;
-    this.scene.add(this.container);
-
-    this.addObjects();
     this.bindListeners();
     this.onResize();
 
@@ -138,30 +121,7 @@ class App {
       this.scene.add(new GridHelper());
       this.scene.add(new AxisHelper());
     }
-
     this.render();
-  }
-
-  addObjects() {
-    const floor = new Floor(this.container); // eslint-disable-line no-unused-vars
-
-    const data = [
-      { type: 'box', position: new Vector2(0, 0), scale: 1.4 },
-      { type: 'sphere', position: new Vector2(-0.4, -0.4), scale: 4 },
-      { type: 'sphere', position: new Vector2(0.2, -0.4), scale: 1.5 },
-      { type: 'box', position: new Vector2(-0.5, 0.4), scale: 2.5 },
-      { type: 'cone', position: new Vector2(0.5, 0.4), scale: 2.5 }
-    ];
-
-    for (let i = 0; i < data.length; i += 1) {
-      const primitive = new Primitive( // eslint-disable-line no-unused-vars
-        this.container,
-        data[i].type,
-        data[i].position,
-        data[i].scale,
-        i / data.length - 1
-      );
-    }
   }
 
   bindListeners() {
@@ -190,12 +150,6 @@ class App {
     this.planeIndicator.update(this.cameras.ar, Object.values(this.anchors));
   };
 
-  removeAnchors = () => {
-    console.log('remove all anchors'); // eslint-disable-line no-console
-    const identifiers = Object.keys(this.anchors);
-    ARKit.removeAnchors(identifiers);
-  };
-
   onARAnchorsAdded = data => {
     console.log('onAnchorsAdded', data); // eslint-disable-line no-console
   };
@@ -203,7 +157,7 @@ class App {
   onARAnchorsRemoved = data => {
     data.anchors.forEach(anchor => {
       if (this.anchors[anchor.identifier]) {
-        this.scene.remove(this.anchors[anchor.identifier]);
+        this.scene.remove(this.anchors[anchor.identifier].group);
       }
     });
   };
@@ -234,18 +188,29 @@ class App {
     }
   };
 
+  update() {
+    if (SHOW_STATS) {
+      stats.begin();
+    }
+
+    this.renderer.render(this.scene, this.cameras.ar);
+
+    if (SHOW_STATS) {
+      this.renderStats.update(this.renderer);
+      stats.end();
+    }
+  }
+
   addARAnchor(anchor) {
     switch (anchor.type) {
       case AR_PLANE_ANCHOR: {
         this.anchors[anchor.identifier] = new ARAnchorPlane(anchor);
-        // Hide the grid mesh
-        this.anchors[anchor.identifier].group.visible = false;
         break;
       }
       default: {
         this.anchors[anchor.identifier] = new ARAnchor(anchor);
-        this.anchors[anchor.identifier].group.add(this.container);
-        this.container.visible = true;
+        this.anchorMesh.visible = true;
+        this.anchors[anchor.identifier].group.add(this.anchorMesh);
         break;
       }
     }

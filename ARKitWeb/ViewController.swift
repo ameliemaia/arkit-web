@@ -24,6 +24,7 @@ class ViewController: UIViewController, MTKViewDelegate, ARSessionDelegate, WKSc
     var renderer: Renderer!
     var webView: FullScreenWKWebView!
     var orientation: UIInterfaceOrientation!
+    var configuration:ARWorldTrackingConfiguration!
 
     // The current viewport size
     var viewportSize: CGSize = CGSize()
@@ -96,7 +97,7 @@ class ViewController: UIViewController, MTKViewDelegate, ARSessionDelegate, WKSc
 
         // Create a session configuration
         // Reference: https://developer.apple.com/documentation/arkit/arworldtrackingsessionconfiguration
-        let configuration = ARWorldTrackingConfiguration()
+        configuration = ARWorldTrackingConfiguration()
         configuration.worldAlignment = .gravity
         configuration.planeDetection = .horizontal
 
@@ -137,24 +138,18 @@ class ViewController: UIViewController, MTKViewDelegate, ARSessionDelegate, WKSc
 
     /**
      Add an anchor to the session
+     The x, y, z coordinates should be in world space
      The tap is currently initiated from the web view since it captures all guestures
 
      Reference: https://developer.apple.com/documentation/arkit/aranchor
      */
-    func addAnchor() {
-        if let currentFrame = session.currentFrame {
-            // Create a transform with a translation of 0.2 meters in front of the camera
-            var translation = matrix_identity_float4x4
-            translation.columns.3.z = -1
-            let transform = simd_mul(currentFrame.camera.transform, translation)
+    func addAnchor(transform: simd_float4x4) {
+        // Add a new anchor to the session
+        let anchor = ARAnchor(transform: transform)
 
-            // Add a new anchor to the session
-            let anchor = ARAnchor(transform: transform)
+        // print("addAnchor \(anchor.identifier)")
 
-            // print("addAnchor \(anchor.identifier)")
-
-            session.add(anchor: anchor)
-        }
+        session.add(anchor: anchor)
     }
 
     func removeAnchors(identifiers: [NSString]) {
@@ -326,7 +321,12 @@ class ViewController: UIViewController, MTKViewDelegate, ARSessionDelegate, WKSc
     /**
      Load a web page
      */
-    func loadWebPage(page: String) {
+    func loadWebPage(page: String, resetSession: Bool = false) {
+
+        if (resetSession) {
+          self.resetSession()
+        }
+
         if (DEBUG) {
 
             let DEV_URL = Bundle.main.infoDictionary!["DEV_URL"] as! String
@@ -353,8 +353,32 @@ class ViewController: UIViewController, MTKViewDelegate, ARSessionDelegate, WKSc
             case "config":
                 let config = data["value"] as! NSDictionary
                 self.updateARConfig(config: config)
+            case "resetSession":
+                self.resetSession()
             case "addAnchor":
-                self.addAnchor()
+                let m = data["value"] as! NSArray
+                let m0 = m[0] as! NSNumber
+                let m1 = m[1] as! NSNumber
+                let m2 = m[2] as! NSNumber
+                let m3 = m[3] as! NSNumber
+                let m4 = m[4] as! NSNumber
+                let m5 = m[5] as! NSNumber
+                let m6 = m[6] as! NSNumber
+                let m7 = m[7] as! NSNumber
+                let m8 = m[8] as! NSNumber
+                let m9 = m[9] as! NSNumber
+                let m10 = m[10] as! NSNumber
+                let m11 = m[11] as! NSNumber
+                let m12 = m[12] as! NSNumber
+                let m13 = m[13] as! NSNumber
+                let m14 = m[14] as! NSNumber
+                let m15 = m[15] as! NSNumber
+                let row0 = float4(m0.floatValue, m1.floatValue, m2.floatValue, m3.floatValue)
+                let row1 = float4(m4.floatValue, m5.floatValue, m6.floatValue, m7.floatValue)
+                let row2 = float4(m8.floatValue, m9.floatValue, m10.floatValue, m11.floatValue)
+                let row3 = float4(m12.floatValue, m13.floatValue, m14.floatValue, m15.floatValue)
+                let matrix = simd_float4x4.init(row0, row1, row2, row3)
+                self.addAnchor(transform: matrix)
             case "removeAnchors":
                 let identifiers = data["value"] as! [NSString]
                 self.removeAnchors(identifiers: identifiers)
@@ -366,7 +390,7 @@ class ViewController: UIViewController, MTKViewDelegate, ARSessionDelegate, WKSc
                 self.hitTest(point: CGPoint.init(x: x, y: y), hitType: hitType)
             case "loadPage":
                 let page = data["value"] as! String
-                self.loadWebPage(page: page)
+                self.loadWebPage(page: page, resetSession: true)
             default: break
             }
         }
@@ -391,6 +415,13 @@ class ViewController: UIViewController, MTKViewDelegate, ARSessionDelegate, WKSc
         // Present an error message to the user
       let ERROR_MESSAGE = "This application needs video permission in order to use Augmented Reality"
       self.displayAlertWithMessage(message: ERROR_MESSAGE)
+    }
+
+    func resetSession() {
+      if(session != nil && configuration != nil){
+        print("Restarting AR session")
+        session.run(configuration, options: [.resetTracking, .removeExistingAnchors])
+      }
     }
 
     func displayAlertWithMessage(message: String){
