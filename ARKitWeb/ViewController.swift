@@ -330,7 +330,7 @@ class ViewController: UIViewController, MTKViewDelegate, ARSessionDelegate, WKSc
         if (DEBUG) {
 
             let DEV_URL = Bundle.main.infoDictionary!["DEV_URL"] as! String
-            let demoUrl = "\(DEV_URL)/\(page).html"
+            let demoUrl = "\(DEV_URL)//\(page).html"
 
             let url = URL(string: demoUrl)!
             webView.load(URLRequest(url: url))
