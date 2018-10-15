@@ -165,7 +165,7 @@ class App {
         const mesh = new Mesh(
           anchorGeometry,
           new MeshLambertMaterial({
-            color: new Color().setHSL(Math.random(), 0.5, 0.7)
+            color: new Color().setHSL(Math.random(), 0.5, 0.6)
           })
         );
         this.anchors[anchor.identifier] = new ARAnchor(anchor);
