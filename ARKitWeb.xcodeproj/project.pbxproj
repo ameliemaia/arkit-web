@@ -17,6 +17,7 @@
 		9C45626B1F21FB7D00A1472B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 9C45626A1F21FB7D00A1472B /* Assets.xcassets */; };
 		9C45626E1F21FB7D00A1472B /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 9C45626C1F21FB7D00A1472B /* LaunchScreen.storyboard */; };
 		9C8B04801F26299B00618E78 /* www in Resources */ = {isa = PBXBuildFile; fileRef = 9C8B047F1F26299B00618E78 /* www */; };
+		9C96828C21740FA8006C6059 /* FullscreenWKWebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C96828B21740FA8006C6059 /* FullscreenWKWebView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -34,6 +35,7 @@
 		9C45626F1F21FB7D00A1472B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		9C4562701F21FB7D00A1472B /* ARKitWeb-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "ARKitWeb-Bridging-Header.h"; sourceTree = "<group>"; };
 		9C8B047F1F26299B00618E78 /* www */ = {isa = PBXFileReference; lastKnownFileType = folder; path = www; sourceTree = "<group>"; };
+		9C96828B21740FA8006C6059 /* FullscreenWKWebView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FullscreenWKWebView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -70,6 +72,7 @@
 				9C8B047F1F26299B00618E78 /* www */,
 				9C45625E1F21FB7D00A1472B /* AppDelegate.swift */,
 				9C4562601F21FB7D00A1472B /* Shaders.metal */,
+				9C96828B21740FA8006C6059 /* FullscreenWKWebView.swift */,
 				9C4562621F21FB7D00A1472B /* ShaderTypes.h */,
 				9C4562631F21FB7D00A1472B /* Renderer.swift */,
 				9C4562651F21FB7D00A1472B /* ViewController.swift */,
@@ -156,6 +159,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				9C2973051F61B93800058754 /* ARConfig.swift in Sources */,
+				9C96828C21740FA8006C6059 /* FullscreenWKWebView.swift in Sources */,
 				9C4562611F21FB7D00A1472B /* Shaders.metal in Sources */,
 				9C4562641F21FB7D00A1472B /* Renderer.swift in Sources */,
 				9C4562661F21FB7D00A1472B /* ViewController.swift in Sources */,
@@ -298,10 +302,10 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				DEVELOPMENT_TEAM = 646M69BYRD;
-				DEV_URL = "";
+				DEV_URL = "http://192.168.2.11:8080";
 				INFOPLIST_FILE = ARKitWeb/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = Stinkstudios.ARKitWeb;
+				PRODUCT_BUNDLE_IDENTIFIER = Stinkstudios.ARKitWeb.amelierosser;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "ARKitWeb/ARKitWeb-Bridging-Header.h";
 				SWIFT_VERSION = 4.0;
@@ -317,7 +321,7 @@
 				DEV_URL = "";
 				INFOPLIST_FILE = ARKitWeb/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = Stinkstudios.ARKitWeb;
+				PRODUCT_BUNDLE_IDENTIFIER = Stinkstudios.ARKitWeb.amelierosser;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "ARKitWeb/ARKitWeb-Bridging-Header.h";
 				SWIFT_VERSION = 4.0;
