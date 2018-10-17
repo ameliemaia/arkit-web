@@ -47,6 +47,7 @@ class App {
     this.renderer = new WebGLRenderer({
       alpha: true
     });
+    this.renderer.setPixelRatio(Math.min(2, window.devicePixelRatio));
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = PCFSoftShadowMap;
     this.renderer.setSize(window.innerWidth, window.innerHeight);
