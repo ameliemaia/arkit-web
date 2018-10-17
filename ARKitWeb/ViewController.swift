@@ -66,6 +66,8 @@ class ViewController: UIViewController, MTKViewDelegate, ARSessionDelegate, WKSc
             webView.scrollView.backgroundColor = UIColor.clear
             webView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
             webView.scrollView.bounces = false;
+            // Allow local files to load
+            webView.configuration.preferences.setValue(true, forKey: "allowFileAccessFromFileURLs")
 
             // Add the webview as a subview of MTKView
             view.addSubview(webView)
