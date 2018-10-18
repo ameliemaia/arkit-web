@@ -127,15 +127,15 @@ class ViewController: UIViewController, MTKViewDelegate, ARSessionDelegate, WKSc
     }
 
     func updateOrientation(){
-      if UIDevice.current.orientation == UIDeviceOrientation.landscapeLeft {
-        orientation = .landscapeRight
-      } else if UIDevice.current.orientation == UIDeviceOrientation.landscapeRight {
-        orientation = .landscapeLeft
-      } else if UIDevice.current.orientation == UIDeviceOrientation.portraitUpsideDown {
-        orientation = .portraitUpsideDown
-      } else if UIDevice.current.orientation == UIDeviceOrientation.portrait {
-        orientation = .portrait
-      }
+        if UIDevice.current.orientation == UIDeviceOrientation.landscapeLeft {
+            orientation = .landscapeRight
+        } else if UIDevice.current.orientation == UIDeviceOrientation.landscapeRight {
+            orientation = .landscapeLeft
+        } else if UIDevice.current.orientation == UIDeviceOrientation.portraitUpsideDown {
+            orientation = .portraitUpsideDown
+        } else if UIDevice.current.orientation == UIDeviceOrientation.portrait {
+            orientation = .portrait
+        }
     }
 
     /**
@@ -326,7 +326,7 @@ class ViewController: UIViewController, MTKViewDelegate, ARSessionDelegate, WKSc
     func loadWebPage(page: String, resetSession: Bool = false) {
 
         if (resetSession) {
-          self.resetSession()
+            self.resetSession()
         }
 
         if (DEBUG) {
@@ -415,32 +415,32 @@ class ViewController: UIViewController, MTKViewDelegate, ARSessionDelegate, WKSc
 
     func session(_ session: ARSession, didFailWithError error: Error) {
         // Present an error message to the user
-      let ERROR_MESSAGE = "This application needs video permission in order to use Augmented Reality"
-      self.displayAlertWithMessage(message: ERROR_MESSAGE)
+        let ERROR_MESSAGE = "This application needs video permission in order to use Augmented Reality"
+        self.displayAlertWithMessage(message: ERROR_MESSAGE)
     }
 
     func resetSession() {
-      if(session != nil && configuration != nil){
-        print("Restarting AR session")
-        session.run(configuration, options: [.resetTracking, .removeExistingAnchors])
-      }
+        if(session != nil && configuration != nil){
+            print("Restarting AR session")
+            session.run(configuration, options: [.resetTracking, .removeExistingAnchors])
+        }
     }
 
     func displayAlertWithMessage(message: String){
 
-      let alertController = UIAlertController(title: "Permissions", message: message, preferredStyle: .alert)
-      let settingsAction = UIAlertAction(title: "Settings", style: .default) { (_) -> Void in
-          guard let settingsUrl = URL(string: UIApplicationOpenSettingsURLString) else {
-              return
-          }
-          if UIApplication.shared.canOpenURL(settingsUrl) {
-              UIApplication.shared.open(settingsUrl, completionHandler: { (success) in })
-          }
-      }
-      let cancelAction = UIAlertAction(title: "Cancel", style: .default, handler: nil)
-      alertController.addAction(cancelAction)
-      alertController.addAction(settingsAction)
-      self.present(alertController, animated: true, completion: nil)
+        let alertController = UIAlertController(title: "Permissions", message: message, preferredStyle: .alert)
+        let settingsAction = UIAlertAction(title: "Settings", style: .default) { (_) -> Void in
+            guard let settingsUrl = URL(string: UIApplicationOpenSettingsURLString) else {
+                return
+            }
+            if UIApplication.shared.canOpenURL(settingsUrl) {
+                UIApplication.shared.open(settingsUrl, completionHandler: { (success) in })
+            }
+        }
+        let cancelAction = UIAlertAction(title: "Cancel", style: .default, handler: nil)
+        alertController.addAction(cancelAction)
+        alertController.addAction(settingsAction)
+        self.present(alertController, animated: true, completion: nil)
     }
 
     /**
@@ -563,6 +563,46 @@ class ViewController: UIViewController, MTKViewDelegate, ARSessionDelegate, WKSc
         // When the user returns to the app
         // print("sessionInterruptionEnded")
         let api = "ARKit.onSessionInteruptedEnded()";
+        self.callClient(api: api)
+    }
+
+    /**
+     Try to relocalize when a session is resumed
+     // https://developer.apple.com/documentation/arkit/arsessionobserver/2941046-sessionshouldattemptrelocalizati
+
+     @param session The session being run.
+     @return bool
+     */
+    func sessionShouldAttemptRelocalization(_ session: ARSession) -> Bool {
+        return true
+    }
+
+    /**
+     This is called when the tracking state changes
+
+     @param session The session being run.
+     @param camera ARCamera
+     */
+    func session(_ session: ARSession, cameraDidChangeTrackingState camera: ARCamera) {
+        var state = ""
+        switch camera.trackingState {
+        case ARCamera.TrackingState.normal:
+            state = "normal"
+        case ARCamera.TrackingState.notAvailable:
+            state = "notAvailable"
+        case ARCamera.TrackingState.limited(let reason):
+            switch(reason) {
+            case .excessiveMotion:
+                state = "excessiveMotion"
+            case .insufficientFeatures:
+                state = "insufficientFeatures"
+            case .initializing:
+                state = "initializing"
+            case .relocalizing:
+                state = "relocalizing"
+            }
+        }
+        let api = "ARKit.onTrackingStateChange('\(state)')";
         self.callClient(api: api)
     }
 }
