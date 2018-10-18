@@ -31,3 +31,14 @@ export const ARHitTestResultType = {
   /** Result type from intersecting with an existing plane anchor, taking into account the plane's extent. */
   [existingPlaneUsingExtent]: 16
 };
+
+// List of all the tracking states from the AR Camera
+export const ARTrackingStates = {
+  normal: 'normal',
+  notAvailable: 'notAvailable',
+  // Limited
+  excessiveMotion: 'excessiveMotion',
+  insufficientFeatures: 'insufficientFeatures',
+  initializing: 'initializing',
+  relocalizing: 'relocalizing'
+};

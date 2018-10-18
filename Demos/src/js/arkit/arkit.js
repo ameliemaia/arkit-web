@@ -59,6 +59,13 @@ const ARKit = new class ARKitInterface {
   }
 
   /**
+   * When the ARCamera tracking state changes
+   */
+  onTrackingStateChange(trackingState) {
+    this.emit('trackingStateChange', trackingState);
+  }
+
+  /**
    * Perform a hitTest
    *
    * Top left is 0,0 Bottom right is 1,1

@@ -12,11 +12,16 @@ demo = demo === '' || demo === 'index' ? demos[0] : demo;
 
 const controller = {
   framework: 'ARKit Web',
-  demo
+  demo,
+  trackingState: ''
 };
 
 const gui = new dat.GUI();
 gui.add(controller, 'framework');
+gui
+  .add(controller, 'trackingState')
+  .name('tracking state')
+  .listen();
 gui.open();
 
 gui.add(controller, 'demo', demos).onChange(value => {
@@ -29,3 +34,4 @@ gui.add(controller, 'demo', demos).onChange(value => {
 });
 
 export default gui;
+export { controller };

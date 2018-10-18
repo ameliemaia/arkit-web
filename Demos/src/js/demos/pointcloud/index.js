@@ -6,15 +6,15 @@ import {
   GridHelper,
   AxisHelper
 } from 'three';
-import '../gui';
 import OrbitControls from '../../lib/OrbitControls';
 import ARKit from '../../arkit/arkit';
 import ARConfig from '../../arkit/config';
 import ARCamera from '../../arkit/camera';
-import { IS_NATIVE } from '../../arkit/constants';
+import { IS_NATIVE, ARTrackingStates } from '../../arkit/constants';
 import ARPointCloud from '../../objects/pointcloud';
 import RenderStats from '../../lib/render-stats';
 import stats from '../../lib/stats';
+import { controller } from '../gui';
 
 const SHOW_STATS = false;
 
@@ -94,6 +94,7 @@ class App {
     ARKit.on('frame', this.onARFrame);
     ARKit.on('sessionInterupted', this.onARSessionInterupted);
     ARKit.on('sessionInteruptedEnded', this.onARSessionInteruptedEnded);
+    ARKit.on('trackingStateChange', this.onARTrackingStateChange);
   }
 
   onARFrame = data => {
@@ -114,6 +115,32 @@ class App {
     this.ui.interruptedOverlay.classList.remove(
       'overlay-session-interrupted--active'
     );
+  };
+
+  onARTrackingStateChange = trackingState => {
+    controller.trackingState = trackingState;
+    switch (trackingState) {
+      case ARTrackingStates.normal:
+        console.log('Tracking normal'); // eslint-disable-line no-console
+        break;
+      case ARTrackingStates.notAvailable:
+        console.log('Tracking not available'); // eslint-disable-line no-console
+        break;
+      case ARTrackingStates.excessiveMotion:
+        console.log('Too much camera motion'); // eslint-disable-line no-console
+        break;
+      case ARTrackingStates.insufficientFeatures:
+        console.log('Not enough features'); // eslint-disable-line no-console
+        break;
+      case ARTrackingStates.initializing:
+        console.log('Initialising'); // eslint-disable-line no-console
+        break;
+      case ARTrackingStates.relocalizing:
+        console.log('Relocalising'); // eslint-disable-line no-console
+        break;
+      default:
+        break;
+    }
   };
 
   render = () => {
