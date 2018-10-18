@@ -179,6 +179,8 @@ class App {
 
   onARFrame = data => {
     this.lights.ambient.intensity = data.ambientIntensity;
+    this.lights.directional.intensity = data.ambientIntensity;
+    this.lights.spot.intensity = data.ambientIntensity;
     this.cameras.ar.update(data.camera);
 
     data.anchors.forEach(anchor => {
